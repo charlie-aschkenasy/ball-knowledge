@@ -1,5 +1,6 @@
 import type { PlayerState } from '../lib/storage';
-import { buildLeaderboard, PLAYER_NAME } from '../lib/leaderboard';
+
+const PLAYER_NAME = 'You';
 
 interface HomeProps {
   player: PlayerState;
@@ -10,7 +11,7 @@ interface HomeProps {
 }
 
 export default function Home({ player, playedToday, onPlay, onLeaderboard, onResetDay }: HomeProps) {
-  const myRank = buildLeaderboard(player.totalPoints).find((e) => e.isPlayer)?.rank ?? null;
+  const myRank = null;
 
   return (
     <div className="screen">

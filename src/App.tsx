@@ -4,7 +4,7 @@ import Atmosphere from './components/Atmosphere';
 import Home from './screens/Home';
 import Quiz, { type QuizAnswer } from './screens/Quiz';
 import Results from './screens/Results';
-import Leaderboard from './screens/Leaderboard';
+import Leaderboards from './screens/Leaderboards';
 import type { Question } from './db/types';
 import { buildDailyQuiz } from './lib/quiz';
 import type { QuizResult } from './lib/scoring';
@@ -86,7 +86,7 @@ export default function App() {
       )}
 
       {screen === 'leaderboard' && (
-        <Leaderboard playerPoints={player.totalPoints} onHome={() => setScreen('home')} />
+        <Leaderboards onHome={() => setScreen('home')} />
       )}
     </div>
   );
