@@ -6,11 +6,14 @@
 // ---------------------------------------------------------------------------
 
 import { POINTS_PER_QUESTION } from '../config';
-import type { Question } from '../data/questions';
+import type { MultipleChoiceQuestion, Question } from '../db/types';
 
 /**
  * A player's answer to a single question.
  * `selectedIndex` is null when the question timed out with no selection.
+ *
+ * NOTE (phase 2): pre-rewrite this file only handles multiple_choice. Phase 7
+ * widens to a per-format grader; this file gets replaced by domain/scoring.ts.
  */
 export interface Answer {
   questionId: string;
@@ -24,7 +27,10 @@ export interface QuizResult {
 }
 
 export function isCorrect(question: Question, answer: Answer): boolean {
-  return answer.selectedIndex === question.correctIndex;
+  return (
+    question.type === 'multiple_choice' &&
+    answer.selectedIndex === (question as MultipleChoiceQuestion).correctIndex
+  );
 }
 
 export function scoreQuiz(questions: Question[], answers: Answer[]): QuizResult {

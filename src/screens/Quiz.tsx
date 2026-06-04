@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { TIMER_SECONDS } from '../config';
-import type { Question } from '../data/questions';
+import type { MultipleChoiceQuestion, Question } from '../db/types';
 import type { Answer } from '../lib/scoring';
 
 interface QuizProps {
@@ -18,7 +18,9 @@ export default function Quiz({ questions, onComplete }: QuizProps) {
   const [locked, setLocked] = useState(false);
   const [secondsLeft, setSecondsLeft] = useState(TIMER_SECONDS);
 
-  const question = questions[index];
+  // Phase 2: pre-rewrite Quiz only supports multiple_choice. Phase 8 rewrites
+  // this screen for format dispatch.
+  const question = questions[index] as MultipleChoiceQuestion;
   const isLast = index === questions.length - 1;
 
   // Advance to the next question (or finish), recording the given answer.
@@ -91,7 +93,7 @@ export default function Quiz({ questions, onComplete }: QuizProps) {
       <h2 className="question-text">{question.text}</h2>
 
       <div className="options">
-        {question.options.map((option, optionIndex) => (
+        {question.options.map((option: string, optionIndex: number) => (
           <button
             key={optionIndex}
             className={optionClass(optionIndex)}
