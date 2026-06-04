@@ -8,7 +8,8 @@
 // step where we run rollDay() N times before returning.
 // ===========================================================================
 
-import { DB_SCHEMA_VERSION, SEASON_LENGTH_DAYS } from '../config';
+import { BACKFILL_DAYS, DB_SCHEMA_VERSION, SEASON_LENGTH_DAYS } from '../config';
+import { advanceDays } from '../domain/season';
 import { QUESTIONS } from './questions';
 import type {
   DB,
@@ -272,7 +273,7 @@ export function buildSeedDB(): DB {
     ...buildArenas(HUMAN_ID, bots),
   ];
 
-  const db: DB = {
+  const baseDB: DB = {
     schemaVersion: DB_SCHEMA_VERSION,
     humanPlayerId: HUMAN_ID,
     players,
@@ -284,9 +285,22 @@ export function buildSeedDB(): DB {
     time: { currentDay: 1, currentWindow: 'morning', mode: 'sim' },
   };
 
-  // Phase 11 will run a 12-day bot-only backfill here, mutating `db` in place
-  // via repeated rollDay() calls (bot sim + difficulty stats + titles) before
-  // returning. The structure above keeps that hook trivial: we'll just call
-  // `runBackfill(db, BACKFILL_DAYS)` before the return.
-  return db;
+  // Backfill: run BACKFILL_DAYS days of bot-only play. The human is exempt
+  // from the absence penalty during this stretch via skipHumanPenalty. After
+  // backfill, currentDay has advanced; we don't roll it back (that would put
+  // bots' lastPlayedDay in the "future" and break the penalty check). Instead
+  // we re-anchor the season so the human still gets a full season ahead, and
+  // set the window to morning so the user can play immediately.
+  const backfilled = advanceDays(baseDB, BACKFILL_DAYS, QUESTIONS, {
+    skipHumanPenalty: true,
+  });
+
+  const day = backfilled.time.currentDay;
+  return {
+    ...backfilled,
+    time: { ...backfilled.time, currentWindow: 'morning', mode: 'sim' },
+    season: { number: 1, startDay: day, endDay: day + SEASON_LENGTH_DAYS },
+    // Backfill produced seasonal scores; we keep them so the leaderboard has
+    // shape on first open. Lifetime scores were always going to be kept.
+  };
 }
