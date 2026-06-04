@@ -1,5 +1,13 @@
-import { useMemo, useState } from 'react';
-import { POINTS_PER_QUESTION } from './config';
+// ===========================================================================
+// App shell + screen routing.
+//
+// All play-flow state lives in the new DB / store. Screen transitions are a
+// small state machine; the play flow uses selectDailyQuiz + applyQuizResult.
+// Title-taken celebrations are computed by diffing computeTitleHolders before
+// and after applying the quiz.
+// ===========================================================================
+
+import { useState } from 'react';
 import Atmosphere from './components/Atmosphere';
 import Home from './screens/Home';
 import Quiz, { type QuizAnswer } from './screens/Quiz';
@@ -7,60 +15,89 @@ import Results from './screens/Results';
 import Leaderboards from './screens/Leaderboards';
 import Groups from './screens/Groups';
 import GroupDetail from './screens/GroupDetail';
-import type { Question } from './db/types';
-import { buildDailyQuiz } from './lib/quiz';
-import type { QuizResult } from './lib/scoring';
+import Dev from './screens/Dev';
+import { QUESTIONS } from './data/questions';
 import {
-  hasPlayedToday,
-  loadPlayer,
-  resetToday,
-  savePlayer,
-  todayString,
-} from './lib/storage';
-import type { PlayerState } from './lib/storage';
+  useBKStore,
+  useDB,
+  useHumanProfile,
+  useHumanStats,
+} from './db/store';
+import type { Question, Sport } from './db/types';
+import { applyQuizResult, type QuizAnswerInput } from './domain/scoring';
+import { selectDailyQuiz } from './domain/selection';
+import { computeTitleHolders, newlyTakenTitles } from './domain/titles';
 
-type Screen = 'home' | 'quiz' | 'results' | 'leaderboard' | 'groups' | 'group-detail';
+type Screen =
+  | 'home'
+  | 'quiz'
+  | 'results'
+  | 'leaderboard'
+  | 'groups'
+  | 'group-detail'
+  | 'dev';
 
-/**
- * Phase 8 shell: Atmosphere mounted under the app, new Quiz screen (format
- * dispatch + per-format timer + drop reveal) wired in. Scoring still writes
- * to the legacy single-bucket totalPoints (phase 9 replaces it with the
- * lifetime + seasonal split on top of the new DB). Home / Results /
- * Leaderboard screens are rewritten in phases 12 / 14 / 15.
- */
+export interface LastResult {
+  correctCount: number;
+  total: number;
+  pointsEarned: number;
+  newLifetime: number;
+  newSeasonal: number;
+  titlesTaken: Sport[];
+}
+
 export default function App() {
-  const [player, setPlayer] = useState<PlayerState>(() => loadPlayer());
+  const db = useDB();
+  const human = useHumanProfile();
+  const humanStats = useHumanStats();
+  const setDB = useBKStore((s) => s.setDB);
+
   const [screen, setScreen] = useState<Screen>('home');
   const [quizQuestions, setQuizQuestions] = useState<Question[]>([]);
-  const [lastResult, setLastResult] = useState<QuizResult | null>(null);
+  const [lastResult, setLastResult] = useState<LastResult | null>(null);
   const [activeGroupId, setActiveGroupId] = useState<string | null>(null);
 
-  const playedToday = useMemo(() => hasPlayedToday(player), [player]);
+  if (!db || !human || !humanStats) {
+    return (
+      <div className="app">
+        <Atmosphere />
+      </div>
+    );
+  }
 
   function startQuiz() {
-    if (hasPlayedToday(player)) return;
-    setQuizQuestions(buildDailyQuiz());
+    if (!db || !human || !humanStats) return;
+    const quiz = selectDailyQuiz(human, humanStats.recentlySeenQuestionIds, QUESTIONS, db);
+    setQuizQuestions(quiz);
     setScreen('quiz');
   }
 
-  function finishQuiz(quizAnswers: QuizAnswer[]) {
-    const correctCount = quizAnswers.filter((a) => a.wasCorrect).length;
-    const total = quizQuestions.length;
-    const pointsEarned = correctCount * POINTS_PER_QUESTION;
-    const updated: PlayerState = {
-      totalPoints: player.totalPoints + pointsEarned,
-      lastPlayedDate: todayString(),
-      quizzesCompleted: player.quizzesCompleted + 1,
-    };
-    savePlayer(updated);
-    setPlayer(updated);
-    setLastResult({ correctCount, pointsEarned, total });
-    setScreen('results');
-  }
+  function finishQuiz(answers: QuizAnswer[]) {
+    if (!db) return;
+    const titlesBefore = computeTitleHolders(db, { kind: 'world' });
 
-  function handleResetDay() {
-    setPlayer(resetToday(player));
-    setScreen('home');
+    const input: QuizAnswerInput[] = answers.map((a) => ({
+      questionId: a.questionId,
+      value: a.value,
+      wasCorrect: a.wasCorrect,
+    }));
+    const result = applyQuizResult(db, db.humanPlayerId, input, quizQuestions);
+    setDB(result.db);
+
+    const titlesAfter = computeTitleHolders(result.db, { kind: 'world' });
+    const taken = newlyTakenTitles(titlesBefore, titlesAfter, result.db.humanPlayerId);
+
+    const newStats = result.db.stats.find((s) => s.playerId === result.db.humanPlayerId);
+    if (!newStats) return;
+    setLastResult({
+      correctCount: result.correctCount,
+      total: result.total,
+      pointsEarned: result.pointsEarned,
+      newLifetime: newStats.lifetimePoints,
+      newSeasonal: newStats.seasonalScore,
+      titlesTaken: taken,
+    });
+    setScreen('results');
   }
 
   return (
@@ -69,11 +106,10 @@ export default function App() {
 
       {screen === 'home' && (
         <Home
-          player={player}
-          playedToday={playedToday}
           onPlay={startQuiz}
-          onLeaderboard={() => setScreen('leaderboard')}
-          onResetDay={handleResetDay}
+          onLeaderboards={() => setScreen('leaderboard')}
+          onGroups={() => setScreen('groups')}
+          onDev={() => setScreen('dev')}
         />
       )}
 
@@ -82,9 +118,8 @@ export default function App() {
       {screen === 'results' && lastResult && (
         <Results
           result={lastResult}
-          newTotal={player.totalPoints}
           onHome={() => setScreen('home')}
-          onLeaderboard={() => setScreen('leaderboard')}
+          onLeaderboards={() => setScreen('leaderboard')}
         />
       )}
 
@@ -105,6 +140,8 @@ export default function App() {
       {screen === 'group-detail' && activeGroupId && (
         <GroupDetail groupId={activeGroupId} onBack={() => setScreen('groups')} />
       )}
+
+      {screen === 'dev' && <Dev onHome={() => setScreen('home')} />}
     </div>
   );
 }
