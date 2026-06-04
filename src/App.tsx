@@ -7,7 +7,7 @@
 // and after applying the quiz.
 // ===========================================================================
 
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import Atmosphere from './components/Atmosphere';
 import Home from './screens/Home';
 import Quiz, { type QuizAnswer } from './screens/Quiz';
@@ -25,8 +25,11 @@ import {
 } from './db/store';
 import type { Question, Sport } from './db/types';
 import { applyQuizResult, type QuizAnswerInput } from './domain/scoring';
+import { rollDay } from './domain/season';
 import { selectDailyQuiz } from './domain/selection';
+import { projectLiveTick } from './domain/time';
 import { computeTitleHolders, newlyTakenTitles } from './domain/titles';
+import { useGameClock } from './hooks/useGameClock';
 
 type Screen =
   | 'home'
@@ -56,6 +59,33 @@ export default function App() {
   const [quizQuestions, setQuizQuestions] = useState<Question[]>([]);
   const [lastResult, setLastResult] = useState<LastResult | null>(null);
   const [activeGroupId, setActiveGroupId] = useState<string | null>(null);
+
+  // Live-mode catch-up: every interval/focus, project against the wall clock
+  // and run rollDay() once per elapsed game day. The 'one rollDay per elapsed
+  // day' invariant lives here AND in advanceDays — never bumps currentDay.
+  const tickLive = useCallback(() => {
+    const current = useBKStore.getState().db;
+    if (!current || current.time.mode !== 'live') return;
+    const { daysElapsed, settledTime } = projectLiveTick(current.time, new Date());
+    if (daysElapsed === 0) {
+      if (current.time.currentWindow !== settledTime.currentWindow) {
+        setDB({
+          ...current,
+          time: { ...current.time, currentWindow: settledTime.currentWindow },
+        });
+      }
+      return;
+    }
+    let next = current;
+    for (let i = 0; i < daysElapsed; i++) {
+      next = rollDay(next, QUESTIONS);
+    }
+    setDB({
+      ...next,
+      time: { ...next.time, currentWindow: settledTime.currentWindow },
+    });
+  }, [setDB]);
+  useGameClock(db?.time ?? null, tickLive);
 
   if (!db || !human || !humanStats) {
     return (
