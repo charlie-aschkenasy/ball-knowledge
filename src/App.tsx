@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import Atmosphere from './components/Atmosphere';
 import Home from './screens/Home';
 import Quiz from './screens/Quiz';
 import Results from './screens/Results';
@@ -18,6 +19,11 @@ import type { PlayerState } from './lib/storage';
 
 type Screen = 'home' | 'quiz' | 'results' | 'leaderboard';
 
+/**
+ * Phase 1 shell: Atmosphere mounted under the app, screen-state machine kept
+ * intact so the existing pre-rewrite screens still load. Phases 2+ replace
+ * this with a router-driven app over the new data layer.
+ */
 export default function App() {
   const [player, setPlayer] = useState<PlayerState>(() => loadPlayer());
   const [screen, setScreen] = useState<Screen>('home');
@@ -52,6 +58,8 @@ export default function App() {
 
   return (
     <div className="app">
+      <Atmosphere />
+
       {screen === 'home' && (
         <Home
           player={player}

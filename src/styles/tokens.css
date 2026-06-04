@@ -1,0 +1,81 @@
+/* ===========================================================================
+   Design tokens. Edit ONLY this file to retheme the app.
+   =========================================================================== */
+
+:root {
+  /* --------- Color (dark base + one electric accent) --------- */
+  --bg:           #0a0c0d;                  /* near-black, slightly cool   */
+  --surface:      #13171a;                  /* card / panel                */
+  --surface-2:    #1f262b;                  /* elevated surface            */
+  --surface-3:    #2a323a;
+  --border:       rgba(214, 255, 79, 0.10); /* lime-tinted hairline        */
+  --border-soft:  rgba(255, 255, 255, 0.05);
+  --text:         #f0f3f5;
+  --text-dim:     #c8d0d6;
+  --muted:        #8a92a0;
+  --muted-2:      #5d6570;
+
+  --accent:       #d6ff4f;                  /* acid lime — the "live" hue  */
+  --accent-2:     #b8e632;                  /* darker lime for hover/press */
+  --accent-ink:   #0a1404;                  /* text on top of --accent     */
+  --gold:         #ffd34d;                  /* title pill                  */
+  --correct:      #22dd66;
+  --wrong:        #ff3b30;
+  --danger:       #ff3b30;                  /* timer below threshold       */
+
+  /* --------- Typography --------- */
+  --font-display: 'Bebas Neue', 'Impact', sans-serif;
+  --font-body:    'Space Grotesk', system-ui, sans-serif;
+  --font-mono:    'JetBrains Mono', 'SF Mono', monospace;
+
+  /* Type scale */
+  --fs-12: 12px;
+  --fs-13: 13px;
+  --fs-14: 14px;
+  --fs-15: 15px;
+  --fs-16: 16px;
+  --fs-17: 17px;
+  --fs-19: 19px;
+  --fs-22: 22px;
+  --fs-26: 26px;
+  --fs-32: 32px;
+  --fs-42: 42px;
+  --fs-56: 56px;
+  --fs-80: 80px;
+
+  /* --------- Spacing --------- */
+  --s-2: 2px;
+  --s-4: 4px;
+  --s-6: 6px;
+  --s-8: 8px;
+  --s-10: 10px;
+  --s-12: 12px;
+  --s-14: 14px;
+  --s-16: 16px;
+  --s-20: 20px;
+  --s-24: 24px;
+  --s-28: 28px;
+  --s-32: 32px;
+  --s-40: 40px;
+  --s-56: 56px;
+
+  /* --------- Radii --------- */
+  --r-6:  6px;
+  --r-10: 10px;
+  --r-14: 14px;
+  --r-20: 20px;
+  --r-pill: 999px;
+
+  /* --------- Shadows --------- */
+  --shadow-soft:  0 1px 0 rgba(255, 255, 255, 0.04) inset,
+                  0 12px 24px -16px rgba(0, 0, 0, 0.7);
+  --shadow-pop:   0 0 0 1px var(--border),
+                  0 14px 40px -18px rgba(0, 0, 0, 0.8),
+                  0 1px 0 rgba(255, 255, 255, 0.04) inset;
+  --glow-accent:  0 0 24px -6px rgba(214, 255, 79, 0.55);
+
+  /* --------- Motion --------- */
+  --t-fast: 100ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  --t-snap: 180ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  --t-soft: 280ms cubic-bezier(0.16, 1, 0.3, 1);
+}
