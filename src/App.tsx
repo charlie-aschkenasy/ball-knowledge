@@ -5,6 +5,8 @@ import Home from './screens/Home';
 import Quiz, { type QuizAnswer } from './screens/Quiz';
 import Results from './screens/Results';
 import Leaderboards from './screens/Leaderboards';
+import Groups from './screens/Groups';
+import GroupDetail from './screens/GroupDetail';
 import type { Question } from './db/types';
 import { buildDailyQuiz } from './lib/quiz';
 import type { QuizResult } from './lib/scoring';
@@ -17,7 +19,7 @@ import {
 } from './lib/storage';
 import type { PlayerState } from './lib/storage';
 
-type Screen = 'home' | 'quiz' | 'results' | 'leaderboard';
+type Screen = 'home' | 'quiz' | 'results' | 'leaderboard' | 'groups' | 'group-detail';
 
 /**
  * Phase 8 shell: Atmosphere mounted under the app, new Quiz screen (format
@@ -31,6 +33,7 @@ export default function App() {
   const [screen, setScreen] = useState<Screen>('home');
   const [quizQuestions, setQuizQuestions] = useState<Question[]>([]);
   const [lastResult, setLastResult] = useState<QuizResult | null>(null);
+  const [activeGroupId, setActiveGroupId] = useState<string | null>(null);
 
   const playedToday = useMemo(() => hasPlayedToday(player), [player]);
 
@@ -87,6 +90,20 @@ export default function App() {
 
       {screen === 'leaderboard' && (
         <Leaderboards onHome={() => setScreen('home')} />
+      )}
+
+      {screen === 'groups' && (
+        <Groups
+          onHome={() => setScreen('home')}
+          onOpen={(id) => {
+            setActiveGroupId(id);
+            setScreen('group-detail');
+          }}
+        />
+      )}
+
+      {screen === 'group-detail' && activeGroupId && (
+        <GroupDetail groupId={activeGroupId} onBack={() => setScreen('groups')} />
       )}
     </div>
   );
