@@ -8,7 +8,8 @@
 // ===========================================================================
 
 import { create } from 'zustand';
-import { loadDBFromStorage, saveDBToStorage } from './storage';
+import { buildSeedDB } from '../data/seed';
+import { clearDBStorage, loadDBFromStorage, saveDBToStorage } from './storage';
 import { getGroup, getHuman, getHumanStats, getPlayer, getStats } from './repo';
 import type { DB } from './types';
 
@@ -18,8 +19,17 @@ interface BKState {
   /** Load the persisted DB into state. Returns the loaded DB (or null). */
   load: () => DB | null;
 
+  /**
+   * Boot the store: load persisted DB or seed a fresh one. Always returns
+   * a DB. Safe to call on every app start.
+   */
+  boot: () => DB;
+
   /** Replace the entire DB and persist. Use for seed + reseed. */
   setDB: (db: DB) => void;
+
+  /** Wipe persistence and reseed. Returns the fresh DB. */
+  reseed: () => DB;
 
   /**
    * Apply a pure DB mutation: `fn(db) → nextDB`. Persists and updates state.
@@ -37,9 +47,29 @@ export const useBKStore = create<BKState>((set, get) => ({
     return db;
   },
 
+  boot: () => {
+    const existing = loadDBFromStorage();
+    if (existing) {
+      set({ db: existing });
+      return existing;
+    }
+    const fresh = buildSeedDB();
+    saveDBToStorage(fresh);
+    set({ db: fresh });
+    return fresh;
+  },
+
   setDB: (db) => {
     saveDBToStorage(db);
     set({ db });
+  },
+
+  reseed: () => {
+    clearDBStorage();
+    const fresh = buildSeedDB();
+    saveDBToStorage(fresh);
+    set({ db: fresh });
+    return fresh;
   },
 
   applyMutation: (fn) => {
