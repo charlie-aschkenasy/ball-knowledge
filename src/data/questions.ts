@@ -959,4 +959,179 @@ export const QUESTIONS: Question[] = [
     intrinsic: 0.40,
     sport: 'general',
   },
+
+  // =============================================================
+  // FILL-IN-BLANK
+  // Answers normalized: lowercase, no punctuation, leading article stripped.
+  // Keep answers short (1–2 words ideally) and unambiguous.
+  // =============================================================
+
+  {
+    id: 'nba-fib-1',
+    type: 'fill_in_blank',
+    text: 'Last name only: the Chicago Bulls superstar who wore #23.',
+    acceptableAnswers: ['Jordan', 'Michael Jordan', 'MJ'],
+    difficulty: 'easy',
+    intrinsic: 0.85,
+    sport: 'NBA',
+  },
+  {
+    id: 'nba-fib-2',
+    type: 'fill_in_blank',
+    text: 'First name only: the NBA superstar nicknamed "King James".',
+    acceptableAnswers: ['LeBron'],
+    difficulty: 'easy',
+    intrinsic: 0.84,
+    sport: 'NBA',
+  },
+  {
+    id: 'nfl-fib-1',
+    type: 'fill_in_blank',
+    text: 'Last name only: the NFL quarterback widely tied to the "GOAT" debate, with 7 Super Bowl rings.',
+    acceptableAnswers: ['Brady', 'Tom Brady'],
+    difficulty: 'easy',
+    intrinsic: 0.80,
+    sport: 'NFL',
+  },
+  {
+    id: 'mlb-fib-1',
+    type: 'fill_in_blank',
+    text: 'Two words: the championship series that decides MLB each year.',
+    acceptableAnswers: ['World Series'],
+    difficulty: 'easy',
+    intrinsic: 0.86,
+    sport: 'MLB',
+  },
+  {
+    id: 'soccer-fib-1',
+    type: 'fill_in_blank',
+    text: 'Last name only: the Argentine soccer star widely known as "CR7"’s rival, wears #10, 8 Ballons d’Or.',
+    acceptableAnswers: ['Messi', 'Lionel Messi'],
+    difficulty: 'easy',
+    intrinsic: 0.78,
+    sport: 'Soccer',
+  },
+  {
+    id: 'soccer-fib-2',
+    type: 'fill_in_blank',
+    text: 'One word: the country that has won the most FIFA World Cup titles.',
+    acceptableAnswers: ['Brazil'],
+    difficulty: 'medium',
+    intrinsic: 0.55,
+    sport: 'Soccer',
+  },
+  {
+    id: 'gen-fib-1',
+    type: 'fill_in_blank',
+    text: 'One word: the only tennis Grand Slam played on grass.',
+    acceptableAnswers: ['Wimbledon'],
+    difficulty: 'medium',
+    intrinsic: 0.58,
+    sport: 'general',
+  },
+  {
+    id: 'gen-fib-2',
+    type: 'fill_in_blank',
+    text: 'Two words: the championship trophy of the NHL.',
+    acceptableAnswers: ['Stanley Cup'],
+    difficulty: 'medium',
+    intrinsic: 0.68,
+    sport: 'general',
+  },
+  {
+    id: 'ufc-fib-1',
+    type: 'fill_in_blank',
+    text: 'Last name only: the UFC lightweight champion who retired undefeated at 29-0.',
+    acceptableAnswers: ['Khabib', 'Nurmagomedov'],
+    difficulty: 'medium',
+    intrinsic: 0.50,
+    sport: 'UFC',
+  },
+  {
+    id: 'nba-fib-3',
+    type: 'fill_in_blank',
+    text: 'Last name only: the only NBA player to score 100 points in a single game.',
+    acceptableAnswers: ['Chamberlain', 'Wilt Chamberlain', 'Wilt'],
+    difficulty: 'hard',
+    intrinsic: 0.42,
+    sport: 'NBA',
+  },
+
+  // =============================================================
+  // MATCHING
+  // 4 left ↔ 4 right. All-correct or it counts wrong.
+  // =============================================================
+
+  {
+    id: 'gen-match-1',
+    type: 'matching',
+    text: 'Match the sport to its championship trophy/series.',
+    pairs: [
+      { left: 'NBA', right: 'Larry O’Brien Trophy' },
+      { left: 'NFL', right: 'Super Bowl' },
+      { left: 'NHL', right: 'Stanley Cup' },
+      { left: 'MLB', right: 'World Series' },
+    ],
+    difficulty: 'medium',
+    intrinsic: 0.62,
+    sport: 'general',
+  },
+  {
+    id: 'gen-match-2',
+    type: 'matching',
+    text: 'Match each position to its primary sport.',
+    pairs: [
+      { left: 'Quarterback', right: 'NFL' },
+      { left: 'Point guard', right: 'NBA' },
+      { left: 'Goalkeeper', right: 'Soccer' },
+      { left: 'Pitcher', right: 'MLB' },
+    ],
+    difficulty: 'easy',
+    intrinsic: 0.80,
+    sport: 'general',
+  },
+  {
+    id: 'gen-match-3',
+    type: 'matching',
+    text: 'Match each playing surface/space to its sport.',
+    pairs: [
+      { left: 'Pitch', right: 'Soccer' },
+      { left: 'Diamond', right: 'Baseball' },
+      { left: 'Court', right: 'Basketball' },
+      { left: 'Octagon', right: 'UFC' },
+    ],
+    difficulty: 'easy',
+    intrinsic: 0.72,
+    sport: 'general',
+  },
+  {
+    id: 'soccer-match-1',
+    type: 'matching',
+    // REVIEW: confirm latest World Cup winners — Brazil 2002, Germany 2014,
+    // France 2018, Argentina 2022.
+    text: 'Match each World Cup year to its winner.',
+    pairs: [
+      { left: '2002', right: 'Brazil' },
+      { left: '2014', right: 'Germany' },
+      { left: '2018', right: 'France' },
+      { left: '2022', right: 'Argentina' },
+    ],
+    difficulty: 'hard',
+    intrinsic: 0.38,
+    sport: 'Soccer',
+  },
+  {
+    id: 'gen-match-4',
+    type: 'matching',
+    text: 'Match each player to their primary sport.',
+    pairs: [
+      { left: 'Tom Brady', right: 'NFL' },
+      { left: 'LeBron James', right: 'NBA' },
+      { left: 'Lionel Messi', right: 'Soccer' },
+      { left: 'Shohei Ohtani', right: 'MLB' },
+    ],
+    difficulty: 'easy',
+    intrinsic: 0.82,
+    sport: 'general',
+  },
 ];

@@ -10,6 +10,11 @@ import { DIFFICULTY_RECIPE } from '../config';
 import { QUESTIONS } from '../data/questions';
 import type { Difficulty, Question } from '../data/questions';
 
+// Phase 2/7: pre-rewrite Quiz screen only renders multiple_choice. Filter
+// here so the legacy build never picks a FIB / matching question. Phase 8
+// removes this whole file in favor of domain/selection.
+const MC_QUESTIONS = QUESTIONS.filter((q) => q.type === 'multiple_choice');
+
 /** Fisher-Yates shuffle returning a new array. */
 function shuffle<T>(items: T[]): T[] {
   const copy = [...items];
@@ -30,7 +35,7 @@ export function buildDailyQuiz(): Question[] {
 
   (Object.keys(DIFFICULTY_RECIPE) as Difficulty[]).forEach((difficulty) => {
     const count = DIFFICULTY_RECIPE[difficulty];
-    const pool = shuffle(QUESTIONS.filter((q) => q.difficulty === difficulty));
+    const pool = shuffle(MC_QUESTIONS.filter((q) => q.difficulty === difficulty));
     for (const question of pool.slice(0, count)) {
       selected.push(question);
       used.add(question.id);
@@ -40,7 +45,7 @@ export function buildDailyQuiz(): Question[] {
   // Fallback: if a difficulty was short, top up from any unused questions.
   const totalWanted = Object.values(DIFFICULTY_RECIPE).reduce((a, b) => a + b, 0);
   if (selected.length < totalWanted) {
-    const extras = shuffle(QUESTIONS.filter((q) => !used.has(q.id)));
+    const extras = shuffle(MC_QUESTIONS.filter((q) => !used.has(q.id)));
     for (const question of extras) {
       if (selected.length >= totalWanted) break;
       selected.push(question);
