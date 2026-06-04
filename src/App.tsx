@@ -1,13 +1,13 @@
 import { useMemo, useState } from 'react';
+import { POINTS_PER_QUESTION } from './config';
 import Atmosphere from './components/Atmosphere';
 import Home from './screens/Home';
-import Quiz from './screens/Quiz';
+import Quiz, { type QuizAnswer } from './screens/Quiz';
 import Results from './screens/Results';
 import Leaderboard from './screens/Leaderboard';
-import type { Question } from './data/questions';
+import type { Question } from './db/types';
 import { buildDailyQuiz } from './lib/quiz';
-import { scoreQuiz } from './lib/scoring';
-import type { Answer, QuizResult } from './lib/scoring';
+import type { QuizResult } from './lib/scoring';
 import {
   hasPlayedToday,
   loadPlayer,
@@ -20,9 +20,11 @@ import type { PlayerState } from './lib/storage';
 type Screen = 'home' | 'quiz' | 'results' | 'leaderboard';
 
 /**
- * Phase 1 shell: Atmosphere mounted under the app, screen-state machine kept
- * intact so the existing pre-rewrite screens still load. Phases 2+ replace
- * this with a router-driven app over the new data layer.
+ * Phase 8 shell: Atmosphere mounted under the app, new Quiz screen (format
+ * dispatch + per-format timer + drop reveal) wired in. Scoring still writes
+ * to the legacy single-bucket totalPoints (phase 9 replaces it with the
+ * lifetime + seasonal split on top of the new DB). Home / Results /
+ * Leaderboard screens are rewritten in phases 12 / 14 / 15.
  */
 export default function App() {
   const [player, setPlayer] = useState<PlayerState>(() => loadPlayer());
@@ -38,16 +40,18 @@ export default function App() {
     setScreen('quiz');
   }
 
-  function finishQuiz(answers: Answer[]) {
-    const result = scoreQuiz(quizQuestions, answers);
+  function finishQuiz(quizAnswers: QuizAnswer[]) {
+    const correctCount = quizAnswers.filter((a) => a.wasCorrect).length;
+    const total = quizQuestions.length;
+    const pointsEarned = correctCount * POINTS_PER_QUESTION;
     const updated: PlayerState = {
-      totalPoints: player.totalPoints + result.pointsEarned,
+      totalPoints: player.totalPoints + pointsEarned,
       lastPlayedDate: todayString(),
       quizzesCompleted: player.quizzesCompleted + 1,
     };
     savePlayer(updated);
     setPlayer(updated);
-    setLastResult(result);
+    setLastResult({ correctCount, pointsEarned, total });
     setScreen('results');
   }
 
