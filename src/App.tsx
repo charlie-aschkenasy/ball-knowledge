@@ -8,6 +8,7 @@
 // ===========================================================================
 
 import { useCallback, useState } from 'react';
+import AdminResetButton from './components/AdminResetButton';
 import Atmosphere from './components/Atmosphere';
 import Home from './screens/Home';
 import Quiz, { type QuizAnswer } from './screens/Quiz';
@@ -147,6 +148,10 @@ export default function App() {
   return (
     <div className="app">
       <Atmosphere />
+
+      {screen !== 'quiz' && (
+        <AdminResetButton onReset={() => setScreen('home')} />
+      )}
 
       {screen === 'home' && (
         <Home

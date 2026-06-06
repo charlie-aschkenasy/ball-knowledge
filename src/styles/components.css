@@ -305,3 +305,40 @@
   color: var(--muted);
   padding: var(--s-20) 0;
 }
+
+/* ---------------- Floating admin reset (corner pill) ---------------- */
+.admin-reset {
+  position: fixed;
+  top: calc(12px + env(safe-area-inset-top));
+  right: 12px;
+  z-index: 50;
+  appearance: none;
+  background: var(--gold-soft);
+  color: #8a7012;
+  border: 1px dashed var(--gold);
+  border-radius: var(--r-pill);
+  font-family: var(--font-body);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 6px 12px;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+  transition: transform var(--t-fast), background var(--t-snap), color var(--t-snap);
+}
+
+.admin-reset:hover {
+  background: var(--gold);
+  color: #ffffff;
+}
+
+.admin-reset:active {
+  transform: scale(0.97);
+}
+
+.admin-reset.flashed {
+  background: var(--accent-soft);
+  color: var(--accent-2);
+  border-color: var(--accent);
+}
