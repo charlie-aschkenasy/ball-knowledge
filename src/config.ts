@@ -20,7 +20,7 @@ export const DIFFICULTY_RECIPE: Record<Difficulty, number> = {
 // ----------------- Scoring -----------------
 
 /** Flat points per correct answer. Wrong / timeout = 0. */
-export const POINTS_PER_QUESTION = 10;
+export const POINTS_PER_QUESTION = 1;
 
 // ----------------- Timers (per-format) -----------------
 
