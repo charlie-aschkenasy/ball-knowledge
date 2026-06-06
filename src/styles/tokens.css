@@ -1,27 +1,32 @@
 /* ===========================================================================
    Design tokens. Edit ONLY this file to retheme the app.
+   Light mode. Wordle-inspired: flat white, dark text, one green accent.
    =========================================================================== */
 
 :root {
-  /* --------- Color (dark base + one electric accent) --------- */
-  --bg:           #0a0c0d;                  /* near-black, slightly cool   */
-  --surface:      #13171a;                  /* card / panel                */
-  --surface-2:    #1f262b;                  /* elevated surface            */
-  --surface-3:    #2a323a;
-  --border:       rgba(214, 255, 79, 0.10); /* lime-tinted hairline        */
-  --border-soft:  rgba(255, 255, 255, 0.05);
-  --text:         #f0f3f5;
-  --text-dim:     #c8d0d6;
-  --muted:        #8a92a0;
-  --muted-2:      #5d6570;
+  /* --------- Color (white base + one green accent) --------- */
+  --bg:           #ffffff;
+  --surface:      #ffffff;
+  --surface-2:    #f5f6f7;
+  --surface-3:    #e9eaed;
+  --border:       #d3d6da;                  /* Wordle empty-tile border    */
+  --border-soft:  #e5e7eb;
+  --text:         #1a1a1b;                  /* Wordle body text            */
+  --text-dim:     #4a4a4b;
+  --muted:        #787c7e;                  /* Wordle secondary text       */
+  --muted-2:      #a0a3a5;
 
-  --accent:       #d6ff4f;                  /* acid lime — the "live" hue  */
-  --accent-2:     #b8e632;                  /* darker lime for hover/press */
-  --accent-ink:   #0a1404;                  /* text on top of --accent     */
-  --gold:         #ffd34d;                  /* title pill                  */
-  --correct:      #22dd66;
-  --wrong:        #ff3b30;
-  --danger:       #ff3b30;                  /* timer below threshold       */
+  --accent:       #6aaa64;                  /* Wordle correct green        */
+  --accent-2:     #538d4e;                  /* darker green for hover/press */
+  --accent-soft:  #e7f1e6;                  /* faint green tint for backgrounds */
+  --accent-ink:   #ffffff;                  /* text on top of --accent     */
+  --gold:         #c9b458;                  /* Wordle present yellow → title pill */
+  --gold-soft:    #faf3d4;
+  --correct:      #6aaa64;
+  --correct-soft: #e7f1e6;
+  --wrong:        #c9303c;
+  --wrong-soft:   #fbe6e7;
+  --danger:       #c9303c;                  /* timer below threshold       */
 
   /* --------- Typography --------- */
   --font-display: 'Bebas Neue', 'Impact', sans-serif;
@@ -67,12 +72,10 @@
   --r-pill: 999px;
 
   /* --------- Shadows --------- */
-  --shadow-soft:  0 1px 0 rgba(255, 255, 255, 0.04) inset,
-                  0 12px 24px -16px rgba(0, 0, 0, 0.7);
-  --shadow-pop:   0 0 0 1px var(--border),
-                  0 14px 40px -18px rgba(0, 0, 0, 0.8),
-                  0 1px 0 rgba(255, 255, 255, 0.04) inset;
-  --glow-accent:  0 0 24px -6px rgba(214, 255, 79, 0.55);
+  --shadow-soft:  0 1px 2px rgba(15, 23, 42, 0.04);
+  --shadow-pop:   0 6px 18px rgba(15, 23, 42, 0.06),
+                  0 0 0 1px var(--border-soft);
+  --glow-accent:  0 0 0 2px rgba(106, 170, 100, 0.18);
 
   /* --------- Motion --------- */
   --t-fast: 100ms cubic-bezier(0.2, 0.8, 0.2, 1);

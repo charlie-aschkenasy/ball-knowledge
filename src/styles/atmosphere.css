@@ -1,6 +1,7 @@
 /* ===========================================================================
-   Background atmosphere — radial gradient mesh + faint SVG noise.
-   Mounted once via <Atmosphere /> inside <App>.
+   Background atmosphere. In light mode the app sits flat on white — no
+   gradient mesh, no noise. We keep the .atmosphere element mounted so the
+   layout/z-index contract with .screen (z-index 1) doesn't change.
    =========================================================================== */
 
 .atmosphere {
@@ -8,39 +9,11 @@
   inset: 0;
   z-index: 0;
   pointer-events: none;
-  overflow: hidden;
+  background: var(--bg);
 }
 
 .atmosphere::before,
-.atmosphere::after {
-  content: '';
-  position: absolute;
-  border-radius: 50%;
-  filter: blur(80px);
-  opacity: 0.45;
-}
-
-/* top-left lime glow */
-.atmosphere::before {
-  top: -20%;
-  left: -10%;
-  width: 60vw;
-  height: 60vw;
-  background: radial-gradient(closest-side, rgba(214, 255, 79, 0.18), transparent 70%);
-}
-
-/* bottom-right warm glow */
-.atmosphere::after {
-  bottom: -25%;
-  right: -15%;
-  width: 70vw;
-  height: 70vw;
-  background: radial-gradient(closest-side, rgba(255, 59, 48, 0.10), transparent 72%);
-}
-
+.atmosphere::after,
 .atmosphere-noise {
-  position: absolute;
-  inset: 0;
-  opacity: 0.05;
-  mix-blend-mode: overlay;
+  display: none;
 }
