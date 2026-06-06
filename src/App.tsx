@@ -40,6 +40,11 @@ type Screen =
   | 'group-detail'
   | 'dev';
 
+export interface RecapItem {
+  question: Question;
+  answer: QuizAnswer;
+}
+
 export interface LastResult {
   correctCount: number;
   total: number;
@@ -47,6 +52,7 @@ export interface LastResult {
   newLifetime: number;
   newSeasonal: number;
   titlesTaken: Sport[];
+  recap: RecapItem[];
 }
 
 export default function App() {
@@ -119,6 +125,13 @@ export default function App() {
 
     const newStats = result.db.stats.find((s) => s.playerId === result.db.humanPlayerId);
     if (!newStats) return;
+    // Zip questions with answers in commit order. Quiz commits sequentially,
+    // so answers[i] always corresponds to quizQuestions[i].
+    const recap: RecapItem[] = quizQuestions.map((q, i) => ({
+      question: q,
+      answer: answers[i],
+    }));
+
     setLastResult({
       correctCount: result.correctCount,
       total: result.total,
@@ -126,6 +139,7 @@ export default function App() {
       newLifetime: newStats.lifetimePoints,
       newSeasonal: newStats.seasonalScore,
       titlesTaken: taken,
+      recap,
     });
     setScreen('results');
   }
