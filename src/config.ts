@@ -63,7 +63,7 @@ export const SPORT_BIAS_PCT = 0.7;
 // ----------------- Seasonal -----------------
 
 /** Points subtracted from seasonalScore for each missed day. */
-export const SEASONAL_MISS_PENALTY = 8;
+export const SEASONAL_MISS_PENALTY = 2;
 /** seasonalScore is clamped to never drop below this value. */
 export const SEASONAL_SCORE_FLOOR = 0;
 /** Length of a season in days. */
