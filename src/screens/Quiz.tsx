@@ -9,7 +9,7 @@
 //   done    → callback with all answers
 // ===========================================================================
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { TIMER_SECONDS_BY_FORMAT } from '../config';
 import DropReveal from '../components/DropReveal';
 import TimerRing from '../components/TimerRing';
@@ -48,6 +48,13 @@ export default function Quiz({ questions, onComplete }: Props) {
   const [secondsLeft, setSecondsLeft] = useState(totalSeconds);
   const isLast = index === questions.length - 1;
 
+  // Idempotency guard. A fast click as the timer hits zero can fire both the
+  // click handler AND the timer effect's lockAndResolve(null) before React
+  // flushes the resulting state — both then read stale state and append to
+  // `answers`. A ref mutates synchronously and is not batched, so the second
+  // caller bails immediately. Reset on advance() and on index change.
+  const lockedRef = useRef(false);
+
   // ---- Phase: timer countdown while asking ----
   useEffect(() => {
     if (phase !== 'asking') return;
@@ -70,6 +77,8 @@ export default function Quiz({ questions, onComplete }: Props) {
   }, [phase]);
 
   function lockAndResolve(value: AnswerValue | null) {
+    if (lockedRef.current) return;
+    lockedRef.current = true;
     const wasCorrect = gradeAnswer(question, value);
     setCommitted(value);
     setResolved(wasCorrect);
@@ -91,7 +100,14 @@ export default function Quiz({ questions, onComplete }: Props) {
     const next = questions[index + 1];
     setSecondsLeft(TIMER_SECONDS_BY_FORMAT[next.type]);
     setPhase('asking');
+    lockedRef.current = false;
   }
+
+  // Belt-and-braces: if the question changes for any other reason, unlock so
+  // the new question accepts its first commit.
+  useEffect(() => {
+    lockedRef.current = false;
+  }, [index]);
 
   if (phase === 'reveal') {
     return (
