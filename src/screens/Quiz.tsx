@@ -13,7 +13,6 @@ import { useEffect, useRef, useState } from 'react';
 import { TIMER_SECONDS_BY_FORMAT } from '../config';
 import DropReveal from '../components/DropReveal';
 import TimerRing from '../components/TimerRing';
-import { DifficultyTag, SportTag } from '../components/Tag';
 import type { AnswerValue, Question } from '../db/types';
 import { gradeAnswer } from '../domain/grading';
 import { MultipleChoice } from '../formats/multipleChoice';
@@ -128,12 +127,6 @@ export default function Quiz({ questions, onComplete }: Props) {
         <TimerRing secondsLeft={secondsLeft} totalSeconds={totalSeconds} />
       </header>
 
-      <div className="quiz-tags">
-        <DifficultyTag difficulty={question.difficulty} />
-        <SportTag sport={question.sport} />
-        <span className="tag tag-sport">{labelForType(question.type)}</span>
-      </div>
-
       <div className="quiz-question-wrap fade-up" key={question.id}>
         <h2 className="quiz-question">{question.text}</h2>
       </div>
@@ -152,17 +145,6 @@ export default function Quiz({ questions, onComplete }: Props) {
       )}
     </div>
   );
-}
-
-function labelForType(t: Question['type']): string {
-  switch (t) {
-    case 'multiple_choice':
-      return 'Pick one';
-    case 'fill_in_blank':
-      return 'Type it';
-    case 'matching':
-      return 'Match all';
-  }
 }
 
 interface FormatBodyProps {
