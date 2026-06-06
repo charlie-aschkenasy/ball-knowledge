@@ -41,9 +41,14 @@ export function FillInBlank({ question, locked, committedText, onCommit }: Props
     onCommit({ kind: 'fib', text: trimmed });
   }
 
+  const isCorrect =
+    locked &&
+    committedText !== null &&
+    gradeFillInBlank(question, { kind: 'fib', text: committedText });
+
   const resolveClass = !locked
     ? 'fib-input'
-    : committedText && gradeFillInBlank(question, { kind: 'fib', text: committedText })
+    : isCorrect
       ? 'fib-input correct'
       : 'fib-input wrong';
 
@@ -69,7 +74,12 @@ export function FillInBlank({ question, locked, committedText, onCommit }: Props
           Lock it in
         </button>
       )}
-      {locked && (
+      {locked && isCorrect && (
+        <p className="fib-hint" style={{ color: 'var(--correct)' }}>
+          ✓ Locked in
+        </p>
+      )}
+      {locked && !isCorrect && (
         <p className="fib-hint">
           Accepted: <strong>{question.acceptableAnswers[0]}</strong>
         </p>
