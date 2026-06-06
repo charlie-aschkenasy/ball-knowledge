@@ -101,14 +101,7 @@ export default function Results({ result, onHome, onLeaderboards }: Props) {
       </div>
 
       {result.recap.length > 0 && (
-        <section className="recap" aria-label="Per-question review">
-          <span className="label" style={{ alignSelf: 'flex-start' }}>
-            Review
-          </span>
-          {result.recap.map((item, i) => (
-            <RecapCard key={item.question.id} index={i} item={item} />
-          ))}
-        </section>
+        <RecapSection items={result.recap} />
       )}
 
       <div className="next-drop">
@@ -177,20 +170,52 @@ function buildShareText(day: number, r: LastResult, streak: number): string {
   ].join('\n');
 }
 
-function RecapCard({ index, item }: { index: number; item: RecapItem }) {
-  const { question, answer } = item;
-  const ok = answer.wasCorrect;
+function RecapSection({ items }: { items: RecapItem[] }) {
+  // Tap a tile to expand. Tap the same tile again to collapse. Only one open
+  // at a time keeps the surface area small.
+  const [openIndex, setOpenIndex] = useState<number | null>(null);
+  const open = openIndex !== null ? items[openIndex] : null;
+
   return (
-    <article className={`recap-card ${ok ? 'ok' : 'bad'}`}>
-      <header className="recap-card-head">
-        <span className="recap-q">Q{index + 1}</span>
-        <span className={`recap-status ${ok ? 'ok' : 'bad'}`}>
-          {ok ? '✓ Correct' : '✗ Wrong'}
-        </span>
-      </header>
-      <p className="recap-text">{question.text}</p>
-      <RecapBody question={question} answer={answer} />
-    </article>
+    <section className="recap" aria-label="Per-question review">
+      <span className="label" style={{ alignSelf: 'flex-start' }}>
+        Review
+      </span>
+      <div className="recap-tiles" role="tablist">
+        {items.map((item, i) => {
+          const ok = item.answer.wasCorrect;
+          const isOpen = i === openIndex;
+          return (
+            <button
+              key={item.question.id}
+              role="tab"
+              aria-pressed={isOpen}
+              className={`recap-tile ${ok ? 'ok' : 'bad'} ${isOpen ? 'open' : ''}`}
+              onClick={() => setOpenIndex(isOpen ? null : i)}
+            >
+              <span className="recap-tile-label">Question</span>
+              <span className="recap-tile-num">{i + 1}</span>
+              <span className="recap-tile-mark">{ok ? '✓' : '✗'}</span>
+            </button>
+          );
+        })}
+      </div>
+
+      {open && openIndex !== null && (
+        <article className={`recap-detail ${open.answer.wasCorrect ? 'ok' : 'bad'}`}>
+          <header className="recap-card-head">
+            <span className="recap-q">Question {openIndex + 1}</span>
+            <span
+              className={`recap-status ${open.answer.wasCorrect ? 'ok' : 'bad'}`}
+            >
+              {open.answer.wasCorrect ? '✓ Correct' : '✗ Wrong'}
+            </span>
+          </header>
+          <p className="recap-text">{open.question.text}</p>
+          <RecapBody question={open.question} answer={open.answer} />
+        </article>
+      )}
+    </section>
   );
 }
 
