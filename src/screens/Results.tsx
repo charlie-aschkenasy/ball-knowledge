@@ -1,12 +1,13 @@
 // ===========================================================================
-// Results screen — count-up tally for points, lifetime, and seasonal. Fires
-// the title-taken celebration banner if applicable. Below the tally, a
-// per-question recap shows correctness + correct answer + what the user
-// submitted across all three formats.
+// Results screen — Wordle end-of-game style. A row of big-number stats, the
+// per-question recap, a countdown to the next drop, and a big Share button
+// that copies an emoji summary to the clipboard.
 // ===========================================================================
 
 import { useEffect, useState } from 'react';
 import { useCountUp } from '../hooks/useCountUp';
+import { useGameTime, useHumanStats } from '../db/store';
+import { formatCountdown, secondsUntilNextWindowChange } from '../domain/time';
 import type { LastResult, RecapItem } from '../App';
 import type { Question } from '../db/types';
 import type { QuizAnswer } from './Quiz';
@@ -18,18 +19,35 @@ interface Props {
 }
 
 export default function Results({ result, onHome, onLeaderboards }: Props) {
+  const stats = useHumanStats();
+  const time = useGameTime();
   const points = useCountUp(result.pointsEarned, 550);
   const lifetime = useCountUp(result.newLifetime, 750);
   const seasonal = useCountUp(result.newSeasonal, 750);
   const [bannerVisible, setBannerVisible] = useState(result.titlesTaken.length > 0);
+  const [copied, setCopied] = useState(false);
+  const [liveTick, setLiveTick] = useState(0);
 
-  // Auto-hide the banner after its animation lifetime so subsequent re-mounts
-  // (eg navigating back) don't replay it.
+  // Auto-hide the title celebration banner
   useEffect(() => {
     if (!bannerVisible) return;
     const id = window.setTimeout(() => setBannerVisible(false), 1900);
     return () => window.clearTimeout(id);
   }, [bannerVisible]);
+
+  // Live mode: refresh the countdown each second
+  useEffect(() => {
+    if (time?.mode !== 'live') return;
+    const id = window.setInterval(() => setLiveTick((t) => t + 1), 1000);
+    return () => window.clearInterval(id);
+  }, [time?.mode]);
+
+  // Auto-hide the "copied" toast
+  useEffect(() => {
+    if (!copied) return;
+    const id = window.setTimeout(() => setCopied(false), 1800);
+    return () => window.clearTimeout(id);
+  }, [copied]);
 
   const { correctCount, total } = result;
   let headline = 'Quiz complete';
@@ -37,34 +55,50 @@ export default function Results({ result, onHome, onLeaderboards }: Props) {
   else if (correctCount === 0) headline = 'Rough one';
   else if (correctCount >= Math.ceil(total / 2)) headline = 'Solid showing';
 
+  const currentDay = time?.currentDay ?? 0;
+  const streak = stats?.streak ?? 0;
+  const longestStreak = stats?.longestStreak ?? 0;
+
+  // Countdown text. In live mode we tick the wall clock; in sim mode the user
+  // controls when day advances via Dev, so we just point at the next day.
+  void liveTick; // referenced so the effect's setState triggers a re-render
+  const countdownText =
+    time?.mode === 'live'
+      ? formatCountdown(secondsUntilNextWindowChange())
+      : 'Day ' + (currentDay + 1);
+
+  function handleShare() {
+    const text = buildShareText(currentDay, result, streak);
+    if (navigator.clipboard?.writeText) {
+      navigator.clipboard
+        .writeText(text)
+        .then(() => setCopied(true))
+        .catch(() => setCopied(true)); // still flash the toast on permission denial
+    } else {
+      // Last-resort: open a prompt so the user can copy manually
+      window.prompt('Copy your result:', text);
+      setCopied(true);
+    }
+  }
+
   return (
     <div className="screen results">
-      <header className="brand" style={{ alignItems: 'center', textAlign: 'center' }}>
+      <header className="results-header">
+        <span className="label">Day {currentDay}</span>
         <h1 className="results-headline">{headline}</h1>
       </header>
 
-      <div className="results-ring">
-        <span className="results-big">
-          {correctCount}
-          <span className="small">/{total}</span>
-        </span>
-        <span className="results-caption">correct</span>
+      <div className="stats-grid">
+        <StatTile label="Correct" big={`${correctCount}/${total}`} />
+        <StatTile label="Points" big={`+${points}`} />
+        <StatTile label="Lifetime" big={lifetime.toLocaleString()} />
+        <StatTile label="Streak" big={`${streak}`} sub={`max ${longestStreak}`} />
       </div>
 
-      <ul className="result-stats">
-        <li>
-          <span className="stat-label">Points earned</span>
-          <strong className="stat-value">+{points}</strong>
-        </li>
-        <li>
-          <span className="stat-label">Lifetime rating</span>
-          <strong className="stat-value">{lifetime.toLocaleString()}</strong>
-        </li>
-        <li>
-          <span className="stat-label">Season score</span>
-          <strong className="stat-value">{seasonal.toLocaleString()}</strong>
-        </li>
-      </ul>
+      <div className="season-strip">
+        <span className="label">Season score</span>
+        <span className="season-strip-value">{seasonal.toLocaleString()}</span>
+      </div>
 
       {result.recap.length > 0 && (
         <section className="recap" aria-label="Per-question review">
@@ -77,12 +111,33 @@ export default function Results({ result, onHome, onLeaderboards }: Props) {
         </section>
       )}
 
-      <button className="btn btn-primary" onClick={onLeaderboards}>
+      <div className="next-drop">
+        <div className="next-drop-row">
+          <span className="label">Next drop</span>
+          <span className="next-drop-time num">{countdownText}</span>
+        </div>
+        <p className="next-drop-sub">
+          {time?.mode === 'live'
+            ? 'until the next window'
+            : 'advance the simulated day in Dev tools to play again'}
+        </p>
+      </div>
+
+      <button className="btn btn-primary btn-share" onClick={handleShare}>
+        <ShareIcon /> Share result
+      </button>
+      <button className="btn btn-secondary" onClick={onLeaderboards}>
         See the leaderboard
       </button>
-      <button className="btn btn-secondary" onClick={onHome}>
+      <button className="btn btn-ghost" onClick={onHome}>
         Back home
       </button>
+
+      {copied && (
+        <div className="toast" role="status">
+          Copied to clipboard
+        </div>
+      )}
 
       {bannerVisible && result.titlesTaken[0] && (
         <div className="title-banner" role="status">
@@ -91,6 +146,35 @@ export default function Results({ result, onHome, onLeaderboards }: Props) {
       )}
     </div>
   );
+}
+
+function StatTile({ label, big, sub }: { label: string; big: string; sub?: string }) {
+  return (
+    <div className="stat-tile">
+      <span className="stat-tile-big">{big}</span>
+      <span className="stat-tile-label">{label}</span>
+      {sub && <span className="stat-tile-sub">{sub}</span>}
+    </div>
+  );
+}
+
+function ShareIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
+      <polyline points="16 6 12 2 8 6" />
+      <line x1="12" y1="2" x2="12" y2="15" />
+    </svg>
+  );
+}
+
+function buildShareText(day: number, r: LastResult, streak: number): string {
+  const grid = r.recap.map((item) => (item.answer.wasCorrect ? '🟩' : '⬜')).join('');
+  return [
+    `Ball Knowledge · Day ${day}`,
+    `${grid} ${r.correctCount}/${r.total}`,
+    `+${r.pointsEarned} pts · Streak ${streak}`,
+  ].join('\n');
 }
 
 function RecapCard({ index, item }: { index: number; item: RecapItem }) {
@@ -138,11 +222,7 @@ function RecapBody({ question, answer }: { question: Question; answer: QuizAnswe
         <>
           <RecapLine
             label="Correct"
-            value={
-              extras > 0
-                ? `${accepted}  (+${extras} more accepted)`
-                : accepted
-            }
+            value={extras > 0 ? `${accepted}  (+${extras} more accepted)` : accepted}
             kind="correct"
           />
           <RecapLine
