@@ -8,7 +8,12 @@
 // step where we run rollDay() N times before returning.
 // ===========================================================================
 
-import { BACKFILL_DAYS, DB_SCHEMA_VERSION, SEASON_LENGTH_DAYS } from '../config';
+import {
+  BACKFILL_DAYS,
+  DB_SCHEMA_VERSION,
+  QUIZ_SIZE,
+  SEASON_LENGTH_DAYS,
+} from '../config';
 import { advanceDays } from '../domain/season';
 import { QUESTIONS } from './questions';
 import type {
@@ -134,6 +139,7 @@ function emptyStats(playerId: string): PlayerStats {
     longestStreak: 0,
     lastPlayedDay: null,
     recentlySeenQuestionIds: [],
+    scoreDistribution: new Array(QUIZ_SIZE + 1).fill(0),
   };
 }
 

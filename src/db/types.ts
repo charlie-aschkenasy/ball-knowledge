@@ -100,6 +100,13 @@ export interface PlayerStats {
   lastPlayedDay: number | null;
   /** Ring buffer of recently-seen question IDs (most recent first). */
   recentlySeenQuestionIds: string[];
+  /**
+   * Histogram of completed quizzes by correct-count. Index i = number of
+   * quizzes that ended with exactly i correct answers. Length is QUIZ_SIZE + 1.
+   * Optional for back-compat with DBs seeded before this field existed —
+   * readers should default to an all-zeros array.
+   */
+  scoreDistribution?: number[];
 }
 
 // ---------------------------------------------------------------------------

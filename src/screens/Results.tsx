@@ -5,6 +5,7 @@
 // ===========================================================================
 
 import { useEffect, useState } from 'react';
+import { QUIZ_SIZE } from '../config';
 import { useCountUp } from '../hooks/useCountUp';
 import { useGameTime, useHumanStats } from '../db/store';
 import { formatCountdown, secondsUntilNextWindowChange } from '../domain/time';
@@ -100,6 +101,8 @@ export default function Results({ result, onHome, onLeaderboards }: Props) {
         <span className="season-strip-value">{seasonal.toLocaleString()}</span>
       </div>
 
+      <Distribution highlight={result.correctCount} stats={stats} />
+
       {result.recap.length > 0 && (
         <RecapSection items={result.recap} />
       )}
@@ -138,6 +141,56 @@ export default function Results({ result, onHome, onLeaderboards }: Props) {
         </div>
       )}
     </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Score distribution — Wordle-style histogram of how many correct per quiz.
+// Reads stats.scoreDistribution (already includes today's quiz, since
+// applyQuizResult ran before the screen mounted). The bucket equal to today's
+// correct count is highlighted green.
+// ---------------------------------------------------------------------------
+function Distribution({
+  highlight,
+  stats,
+}: {
+  highlight: number;
+  stats: ReturnType<typeof useHumanStats>;
+}) {
+  const dist = stats?.scoreDistribution ?? new Array(QUIZ_SIZE + 1).fill(0);
+  const total = dist.reduce((a: number, b: number) => a + b, 0);
+  const max = Math.max(1, ...dist);
+
+  return (
+    <section className="distribution" aria-label="Score distribution">
+      <div className="distribution-head">
+        <span className="label">Score distribution</span>
+        <span className="distribution-total">
+          {total} {total === 1 ? 'quiz' : 'quizzes'}
+        </span>
+      </div>
+      <div className="dist-rows">
+        {dist.map((count: number, i: number) => {
+          const pct = (count / max) * 100;
+          const isToday = i === highlight;
+          return (
+            <div className="dist-row" key={i}>
+              <span className="dist-row-label">
+                {i}/{QUIZ_SIZE}
+              </span>
+              <div className="dist-bar-track">
+                <div
+                  className={`dist-bar ${isToday ? 'today' : ''}`}
+                  style={{ width: `${pct}%` }}
+                >
+                  <span className="dist-bar-count">{count}</span>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </section>
   );
 }
 

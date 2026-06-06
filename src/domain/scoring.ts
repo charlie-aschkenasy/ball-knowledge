@@ -5,7 +5,7 @@
 // Pure: returns a new DB. Caller (store / App) saves.
 // ===========================================================================
 
-import { POINTS_PER_QUESTION, RECENT_BUFFER } from '../config';
+import { POINTS_PER_QUESTION, QUIZ_SIZE, RECENT_BUFFER } from '../config';
 import { recordAnswerEvent, updateStats } from '../db/repo';
 import type {
   AnswerEvent,
@@ -80,6 +80,14 @@ export function applyQuizResult(
       answers.map((a) => a.questionId),
     );
 
+    // Bump the score-distribution bucket for this quiz's correct count.
+    // Default the array if absent (back-compat with pre-distribution DBs).
+    const dist = s.scoreDistribution
+      ? [...s.scoreDistribution]
+      : new Array(QUIZ_SIZE + 1).fill(0);
+    const safeIdx = Math.min(Math.max(0, correctCount), QUIZ_SIZE);
+    dist[safeIdx] = (dist[safeIdx] ?? 0) + 1;
+
     return {
       ...s,
       lifetimePoints: s.lifetimePoints + pointsEarned,
@@ -90,6 +98,7 @@ export function applyQuizResult(
       longestStreak: nextLongest,
       lastPlayedDay: day,
       recentlySeenQuestionIds: updatedRecent,
+      scoreDistribution: dist,
     } satisfies PlayerStats;
   });
 

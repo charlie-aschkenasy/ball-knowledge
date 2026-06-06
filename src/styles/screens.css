@@ -442,6 +442,76 @@
   line-height: 1;
 }
 
+/* Score distribution (Wordle-style histogram) */
+.distribution {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-8);
+}
+
+.distribution-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.distribution-total {
+  font-family: var(--font-body);
+  font-size: var(--fs-12);
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.dist-rows {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-6);
+}
+
+.dist-row {
+  display: grid;
+  grid-template-columns: 42px 1fr;
+  gap: var(--s-10);
+  align-items: center;
+}
+
+.dist-row-label {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  font-size: var(--fs-13);
+  color: var(--muted);
+}
+
+.dist-bar-track {
+  height: 24px;
+  display: flex;
+  align-items: stretch;
+}
+
+.dist-bar {
+  height: 100%;
+  background: var(--muted);
+  border-radius: var(--r-6);
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 0 var(--s-8);
+  color: #ffffff;
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  font-size: var(--fs-13);
+  min-width: 26px;
+  transition: width 700ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.dist-bar.today {
+  background: var(--accent);
+}
+
 /* Next-drop countdown card */
 .next-drop {
   background: var(--surface-2);
