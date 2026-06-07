@@ -927,6 +927,67 @@
   flex: 0 0 auto;
 }
 
+.avatar-lg {
+  width: 64px;
+  height: 64px;
+  font-size: var(--fs-32);
+  border-width: 3px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+/* Leader hero card on GroupDetail */
+.leader-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-10);
+  background: linear-gradient(135deg, var(--gold-soft), var(--surface));
+  border: 2px solid var(--gold);
+  border-radius: var(--r-20);
+  padding: var(--s-14) var(--s-16);
+  box-shadow: 0 4px 14px rgba(201, 180, 88, 0.15);
+}
+
+.leader-card-row {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: var(--s-14);
+  align-items: center;
+}
+
+.leader-card-name-col {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.leader-card-name {
+  font-family: var(--font-display);
+  font-size: var(--fs-32);
+  letter-spacing: 0.02em;
+  color: #8a7012;
+  line-height: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.leader-card-sub {
+  font-family: var(--font-body);
+  font-size: var(--fs-12);
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-weight: 700;
+}
+
+.leader-card-points {
+  font-family: var(--font-display);
+  font-size: var(--fs-42);
+  color: #8a7012;
+  line-height: 1;
+}
+
 .league-name-col {
   min-width: 0;
   display: flex;

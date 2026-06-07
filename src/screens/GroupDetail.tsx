@@ -1,11 +1,14 @@
 // ===========================================================================
-// One group's leaderboard. Same row component as the main board, but the
-// title pills are scoped to THIS group (so "NBA guy" here is the NBA leader
+// One group's leaderboard. Same chunky-row style as the main Leaderboards
+// page, plus a prominent "leader" hero card at the top so the top user's
+// name is the first thing you see.
+//
+// Title pills are scoped to THIS group (so "NBA guy" here is the NBA leader
 // inside the group, not in the world).
 // ===========================================================================
 
 import { useMemo, useState } from 'react';
-import LeaderboardRow from '../components/LeaderboardRow';
+import { Avatar, LeagueRow } from '../components/LeagueRow';
 import SegmentedControl from '../components/SegmentedControl';
 import { useDB, useGroup } from '../db/store';
 import { aggregateLeaderboard, type LeaderboardView } from '../domain/leaderboard';
@@ -46,16 +49,42 @@ export default function GroupDetail({ groupId, onBack }: Props) {
     );
   }
 
+  const leader = rows[0];
+  const restRows = rows.slice(1);
+  const subtitle =
+    group.type === 'arena' && group.sport
+      ? `${group.sport} arena · ${group.memberIds.length} members`
+      : `Squad · ${group.memberIds.length} members`;
+
   return (
     <div className="screen">
-      <header className="brand group-detail-head">
-        <h1 className="brand-title">{group.name}</h1>
-        <p className="brand-tag">
-          {group.type === 'arena' && group.sport
-            ? `${group.sport} arena · ${group.memberIds.length} members`
-            : `Squad · ${group.memberIds.length} members`}
-        </p>
+      <header className="league-header">
+        <div className="league-badge">{group.type === 'arena' ? '🏟️' : '👥'}</div>
+        <div className="league-titles">
+          <h1 className="league-title">{group.name}</h1>
+          <p className="league-sub">{subtitle}</p>
+        </div>
       </header>
+
+      {leader && (
+        <article className="leader-card">
+          <span className="label">Top of {group.name}</span>
+          <div className="leader-card-row">
+            <Avatar name={leader.player.name} highlight={leader.isHuman} large />
+            <div className="leader-card-name-col">
+              <span className="leader-card-name">
+                {leader.isHuman ? 'YOU' : leader.player.name}
+              </span>
+              <span className="leader-card-sub">
+                {leader.isHuman ? '#1 · keep it up' : '#1 in this group'}
+              </span>
+            </div>
+            <span className="leader-card-points">
+              {leader.points.toLocaleString()}
+            </span>
+          </div>
+        </article>
+      )}
 
       <SegmentedControl<LeaderboardView>
         options={[
@@ -69,21 +98,19 @@ export default function GroupDetail({ groupId, onBack }: Props) {
       {rows.length === 0 ? (
         <p className="lb-empty">No one ranked yet.</p>
       ) : (
-        <ol className="board">
-          {rows.map((r) => (
-            <LeaderboardRow
+        <ol className="league-list">
+          {restRows.map((r) => (
+            <LeagueRow
               key={r.player.id}
-              rank={r.rank}
-              name={r.player.name}
-              points={r.points}
-              isHuman={r.isHuman}
+              entry={r}
+              zone="safe"
               titles={titlesHeldBy(titles, r.player.id)}
             />
           ))}
         </ol>
       )}
 
-      <button className="btn btn-secondary" onClick={onBack}>
+      <button className="btn btn-ghost" onClick={onBack}>
         Back to groups
       </button>
     </div>

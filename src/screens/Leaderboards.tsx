@@ -9,11 +9,11 @@
 // ===========================================================================
 
 import { Fragment, useMemo, useState } from 'react';
+import { LeagueRow, type Zone } from '../components/LeagueRow';
 import SegmentedControl from '../components/SegmentedControl';
 import { useDB, useSeason } from '../db/store';
 import {
   aggregateLeaderboard,
-  type LeaderboardEntry,
   type LeaderboardScope,
   type LeaderboardView,
 } from '../domain/leaderboard';
@@ -140,8 +140,6 @@ export default function Leaderboards({ onHome }: Props) {
 
 // ---------------------------------------------------------------------------
 
-type Zone = 'promote' | 'safe' | 'demote';
-
 function zoneFor(index: number, total: number): Zone {
   if (index < PROMOTE_COUNT) return 'promote';
   if (index >= total - DEMOTE_COUNT) return 'demote';
@@ -158,75 +156,5 @@ function ZoneBanner({ kind, count }: { kind: 'promote' | 'demote'; count: number
           : `Demotion zone · bottom ${count}`}
       </span>
     </li>
-  );
-}
-
-interface LeagueRowProps {
-  entry: LeaderboardEntry;
-  zone: Zone;
-  titles: Sport[];
-}
-
-function LeagueRow({ entry, zone, titles }: LeagueRowProps) {
-  const cls = [
-    'league-row',
-    entry.isHuman ? 'me' : '',
-    !entry.isHuman ? `zone-${zone}` : '', // YOU row gets its own treatment, not zone-tint
-  ]
-    .filter(Boolean)
-    .join(' ');
-  return (
-    <li className={cls}>
-      <span className="league-rank">{entry.rank}</span>
-      <Avatar name={entry.player.name} highlight={entry.isHuman} />
-      <div className="league-name-col">
-        <span className="league-name">
-          {entry.isHuman ? 'YOU' : entry.player.name}
-        </span>
-        <div className="league-name-meta">
-          {entry.stats.streak > 0 && (
-            <span className="league-streak">🔥 {entry.stats.streak}</span>
-          )}
-          {titles.map((s) => (
-            <span key={s} className="league-title-pill">
-              🏆 {s}
-            </span>
-          ))}
-        </div>
-      </div>
-      <span className="league-points">{entry.points.toLocaleString()}</span>
-    </li>
-  );
-}
-
-// Deterministic color from name. Avatar circle with the player's initial.
-const AVATAR_COLORS = [
-  '#6aaa64', // green
-  '#c9b458', // gold
-  '#c9303c', // red
-  '#5e7ce2', // blue
-  '#8b5cf6', // violet
-  '#ec4899', // pink
-  '#f97316', // orange
-  '#0ea5e9', // cyan
-  '#14b8a6', // teal
-  '#a16207', // brown
-];
-
-function colorForName(name: string): string {
-  let h = 0;
-  for (let i = 0; i < name.length; i++) {
-    h = (h * 31 + name.charCodeAt(i)) >>> 0;
-  }
-  return AVATAR_COLORS[h % AVATAR_COLORS.length];
-}
-
-function Avatar({ name, highlight }: { name: string; highlight?: boolean }) {
-  const bg = highlight ? 'var(--accent)' : colorForName(name);
-  const letter = name.trim().charAt(0).toUpperCase() || '?';
-  return (
-    <span className="avatar" style={{ background: bg }} aria-hidden>
-      {letter}
-    </span>
   );
 }
