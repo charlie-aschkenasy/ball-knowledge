@@ -1,10 +1,11 @@
 // ============================================================
 // Edge Function: submit
-// Grades a player's answers ON THE SERVER, writes the score, captures one
-// answer_events row per question (for later difficulty/points tuning), and only
-// then returns what was correct (for the recap screen). The client never had
-// the answers and cannot write to `submissions` / `answer_events`, so scores
-// and analytics can't be faked.
+// Grades a player's answers ON THE SERVER, enforces the server-anchored time
+// window (hard-reject if expired / never started), writes the score, captures
+// one answer_events row per question (for later difficulty/points tuning), and
+// only then returns what was correct (for the recap screen). The client never
+// had the answers and cannot write to `submissions` / `answer_events`, so scores
+// and analytics can't be faked. The client-sent started_at is ignored.
 //
 // Expected request body:
 //   { "answers": [ { "questionId": "nba-easy-1", "value": { "selectedIndex": 1 }, "timeMs": 4200 }, ... ],
@@ -24,6 +25,16 @@ const corsHeaders = {
 };
 
 const POINTS_PER_QUESTION = 10;
+
+// Per-question time limits (seconds), mirrored from the client quiz. The server
+// window is the sum over today's questions + a buffer for reveal/feedback/network.
+const TIMER_BY_TYPE: Record<string, number> = {
+  multiple_choice: 15,
+  fill_in_blank: 22,
+  matching: 28,
+};
+const DEFAULT_TIMER = 20;
+const BUFFER_SECONDS = 60;
 
 function normalize(s: string): string {
   return s
@@ -91,7 +102,24 @@ Deno.serve(async (req) => {
   if (!questions) return json({ error: 'Could not load questions.' }, 500);
   const qById = new Map(questions.map((q) => [q.id, q]));
 
-  // 5. Grade on the server.
+  // 5. Enforce the server-anchored time window BEFORE grading or writing anything.
+  //    The start was recorded by get-today; the client-sent started_at is ignored.
+  const { data: startRow } = await admin
+    .from('quiz_starts').select('started_at')
+    .eq('user_id', user.id).eq('play_date', today).maybeSingle();
+  if (!startRow) {
+    return json({ error: 'Start today’s quiz first.' }, 403);
+  }
+  const allowedMs = (set.question_ids.reduce((sum: number, id: string) => {
+    const q = qById.get(id);
+    return sum + (TIMER_BY_TYPE[q?.type] ?? DEFAULT_TIMER);
+  }, 0) + BUFFER_SECONDS) * 1000;
+  const serverStartedAt = startRow.started_at as string;
+  if (Date.now() - new Date(serverStartedAt).getTime() > allowedMs) {
+    return json({ error: 'Time’s up — this quiz has expired.' }, 403);
+  }
+
+  // 6. Grade on the server.
   let correctCount = 0;
   const recap = set.question_ids.map((id: string) => {
     const q = qById.get(id);
@@ -109,13 +137,14 @@ Deno.serve(async (req) => {
   });
   const score = correctCount * POINTS_PER_QUESTION;
 
-  // 6. Write the score (service role bypasses RLS; unique(user,day) = one play/day).
+  // 7. Write the score (service role bypasses RLS; unique(user,day) = one play/day).
+  //    Use the SERVER-anchored start, not the client's.
   const submittedAt = new Date().toISOString();
   const { error: insErr } = await admin.from('submissions').insert({
     user_id: user.id,
     play_date: today,
     answers: submitted,
-    started_at: body?.started_at ?? submittedAt,
+    started_at: serverStartedAt,
     correct_count: correctCount,
     score,
   });
@@ -123,7 +152,7 @@ Deno.serve(async (req) => {
     return json({ error: 'You have already played today.', detail: insErr.message }, 409);
   }
 
-  // 7. Capture one answer_events row per question for later tuning. Snapshot the
+  // 8. Capture one answer_events row per question for later tuning. Snapshot the
   //    question's sport/difficulty/type so re-tuning later won't rewrite history.
   //    Best-effort: the score is already saved, so a capture failure must not
   //    break the player's result. unique(user,question,day) guards retries.

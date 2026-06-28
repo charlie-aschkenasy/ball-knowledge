@@ -1,11 +1,9 @@
 // ============================================================
 // Edge Function: get-today
-// Returns today's questions with ALL answer data stripped out.
-// Deploy: Supabase Dashboard → Edge Functions → Deploy a new function
-//         → Via Editor → name it "get-today" → paste this → Deploy.
-//
-// If the editor complains about the import line, the inline AI Assistant
-// can adjust it; npm: specifiers are supported by the Supabase runtime.
+// Returns today's questions with ALL answer data stripped out, and records the
+// signed-in user's server-anchored start time (first fetch wins — re-fetching
+// never resets the clock). `submit` enforces the time window against it.
+// Deploy with "Verify JWT" ON.
 // ============================================================
 
 import { createClient } from 'npm:@supabase/supabase-js@2';
@@ -18,8 +16,8 @@ const corsHeaders = {
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
 
-  // Service-role client: bypasses RLS so it can read the locked questions table.
-  // SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are auto-provided by Supabase.
+  // Service-role client: bypasses RLS so it can read the locked questions table
+  // and write quiz_starts. SUPABASE_URL / SERVICE_ROLE_KEY are auto-provided.
   const admin = createClient(
     Deno.env.get('SUPABASE_URL')!,
     Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
@@ -48,13 +46,32 @@ Deno.serve(async (req) => {
     return json({ error: 'Could not load questions.' }, 500);
   }
 
-  // 3. Preserve the daily set's order.
+  // 3. Anchor the start time for the signed-in user. First fetch wins; a re-fetch
+  //    leaves the original started_at untouched (ignoreDuplicates), so the clock
+  //    can't be reset. Anonymous callers (no user) just skip this.
+  const authHeader = req.headers.get('Authorization') ?? '';
+  const userClient = createClient(
+    Deno.env.get('SUPABASE_URL')!,
+    Deno.env.get('SUPABASE_ANON_KEY')!,
+    { global: { headers: { Authorization: authHeader } } },
+  );
+  const { data: { user } } = await userClient.auth.getUser();
+  if (user) {
+    await admin
+      .from('quiz_starts')
+      .upsert({ user_id: user.id, play_date: today }, {
+        onConflict: 'user_id,play_date',
+        ignoreDuplicates: true,
+      });
+  }
+
+  // 4. Preserve the daily set's order.
   const byId = new Map(questions.map((q) => [q.id, q]));
   const ordered = set.question_ids
     .map((id: string) => byId.get(id))
     .filter(Boolean) as any[];
 
-  // 4. STRIP every answer field before it leaves the server.
+  // 5. STRIP every answer field before it leaves the server.
   const safe = ordered.map((q) => {
     const base = {
       id: q.id,
@@ -67,7 +84,6 @@ Deno.serve(async (req) => {
       return { ...base, options: q.options }; // options shown, correct_index withheld
     }
     if (q.type === 'matching') {
-      // Send the left items and a shuffled set of right items — never the pairing.
       const pairs = (q.pairs ?? []) as { left: string; right: string }[];
       return {
         ...base,
@@ -75,8 +91,7 @@ Deno.serve(async (req) => {
         rights: pairs.map((p) => p.right).sort(() => Math.random() - 0.5),
       };
     }
-    // fill_in_blank: nothing extra (no answer hints)
-    return base;
+    return base; // fill_in_blank: no answer hints
   });
 
   return json({
