@@ -9,9 +9,26 @@ import { QUIZ_SIZE } from '../config';
 import { useCountUp } from '../hooks/useCountUp';
 import { useGameTime, useHumanStats } from '../db/store';
 import { formatCountdown, secondsUntilNextWindowChange } from '../domain/time';
-import type { LastResult, RecapItem } from '../App';
-import type { Question } from '../db/types';
+import type { Question, Sport } from '../db/types';
 import type { QuizAnswer } from './Quiz';
+
+// NOTE: legacy local-sim screen (no longer wired into the app — the live flow
+// lives in src/play/*). These result types used to live in App; kept here so
+// the file still type-checks standalone.
+export interface RecapItem {
+  question: Question;
+  answer: QuizAnswer;
+}
+
+export interface LastResult {
+  correctCount: number;
+  total: number;
+  pointsEarned: number;
+  newLifetime: number;
+  newSeasonal: number;
+  titlesTaken: Sport[];
+  recap: RecapItem[];
+}
 
 interface Props {
   result: LastResult;

@@ -1,0 +1,64 @@
+/* ===========================================================================
+   Auth (login / sign-up) + a couple of helpers for the server-backed play
+   flow. Reuses the existing tokens, .card, .btn and .fib-input styles.
+   =========================================================================== */
+
+.screen.auth {
+  justify-content: center;
+  gap: var(--s-20, 20px);
+}
+
+.auth-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-14, 14px);
+}
+
+.auth-heading {
+  margin: 0 0 var(--s-4, 4px);
+  font-family: var(--font-display);
+  font-size: var(--fs-28, 28px);
+}
+
+.auth-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.auth-field .fib-input {
+  width: 100%;
+}
+
+.auth-error {
+  margin: 0;
+  color: var(--wrong);
+  font-size: var(--fs-14, 14px);
+}
+
+.auth-notice {
+  margin: 0;
+  color: var(--muted);
+  font-size: var(--fs-14, 14px);
+}
+
+/* ---- Quiz helpers ---- */
+
+.quiz-meta {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-bottom: var(--s-12, 12px);
+}
+
+/* Locked-in selection — neutral highlight (we don't know correctness yet). */
+.answer.picked {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent-2);
+}
+
+.answer.dimmed {
+  opacity: 0.5;
+}
