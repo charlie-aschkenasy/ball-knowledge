@@ -5,3 +5,8 @@ dist-ssr
 .DS_Store
 .vite
 *.tsbuildinfo
+
+# Local environment files (never commit real values)
+.env
+.env.*
+!.env.example
