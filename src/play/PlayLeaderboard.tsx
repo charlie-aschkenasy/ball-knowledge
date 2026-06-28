@@ -5,7 +5,7 @@
 // ===========================================================================
 
 import { useEffect, useState } from 'react';
-import { Avatar } from '../components/LeagueRow';
+import { Avatar } from '../components/Avatar';
 import { getLeaderboard, type LeaderboardRow } from '../lib/api';
 
 interface Props {
@@ -39,7 +39,10 @@ export default function PlayLeaderboard({ onHome }: Props) {
       {error && <p className="lb-empty">{error}</p>}
       {!error && rows === null && <p className="lb-empty">Loading…</p>}
       {!error && rows !== null && rows.length === 0 && (
-        <p className="lb-empty">No one ranked yet.</p>
+        <div className="lb-empty">
+          <p className="lb-empty-title">No scores yet today</p>
+          <p>Play the quiz and you’ll be first on the board.</p>
+        </div>
       )}
 
       {rows && rows.length > 0 && (

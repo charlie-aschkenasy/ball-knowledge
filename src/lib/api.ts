@@ -85,6 +85,22 @@ export class AlreadyPlayedError extends Error {
   }
 }
 
+/** Thrown by getToday when no daily set is published for today. */
+export class NoDailySetError extends Error {
+  constructor(message = 'No daily set published for today.') {
+    super(message);
+    this.name = 'NoDailySetError';
+  }
+}
+
+/** Thrown by submitQuiz when the server-anchored window expired (or never started). */
+export class WindowExpiredError extends Error {
+  constructor(message = 'Time’s up — this quiz has expired.') {
+    super(message);
+    this.name = 'WindowExpiredError';
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Edge Function helper
 // ---------------------------------------------------------------------------
@@ -117,6 +133,8 @@ async function callFunction<T>(name: string, body: unknown): Promise<T> {
         ? String((payload as { error: unknown }).error)
         : null) ?? `${name} failed (${res.status})`;
     if (/already played/i.test(errMsg)) throw new AlreadyPlayedError(errMsg);
+    if (/no daily set/i.test(errMsg)) throw new NoDailySetError(errMsg);
+    if (/time.{0,3}s up|start today/i.test(errMsg)) throw new WindowExpiredError(errMsg);
     throw new Error(errMsg);
   }
 

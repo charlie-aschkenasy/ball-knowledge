@@ -779,6 +779,12 @@
   text-align: center;
   padding: var(--s-20) 0;
 }
+.lb-empty-title {
+  font-family: var(--font-display);
+  font-size: var(--fs-22);
+  color: var(--text);
+  margin: 0 0 6px;
+}
 
 /* League header card */
 .league-header {

@@ -15,13 +15,22 @@ import {
   getToday,
   submitQuiz,
   AlreadyPlayedError,
+  NoDailySetError,
+  WindowExpiredError,
   type ServerQuestion,
   type SelectedAnswers,
   type AnswerTimes,
   type SubmitResult,
 } from '../lib/api';
 
-type Screen = 'home' | 'quiz' | 'results' | 'leaderboard' | 'already-played';
+type Screen =
+  | 'home'
+  | 'quiz'
+  | 'results'
+  | 'leaderboard'
+  | 'already-played'
+  | 'no-set'
+  | 'expired';
 
 export default function PlayApp() {
   const [screen, setScreen] = useState<Screen>('home');
@@ -45,7 +54,11 @@ export default function PlayApp() {
       setResult(null);
       setScreen('quiz');
     } catch (e) {
-      setHomeError(e instanceof Error ? e.message : 'Could not load today’s quiz.');
+      if (e instanceof NoDailySetError) {
+        setScreen('no-set');
+      } else {
+        setHomeError(e instanceof Error ? e.message : 'Could not load today’s quiz.');
+      }
     } finally {
       setLoadingQuiz(false);
     }
@@ -61,6 +74,8 @@ export default function PlayApp() {
     } catch (e) {
       if (e instanceof AlreadyPlayedError) {
         setScreen('already-played');
+      } else if (e instanceof WindowExpiredError) {
+        setScreen('expired');
       } else {
         setHomeError(e instanceof Error ? e.message : 'Could not submit your answers.');
         setScreen('home');
@@ -101,6 +116,47 @@ export default function PlayApp() {
         </header>
         <p style={{ color: 'var(--muted)', textAlign: 'center' }}>
           You’ve already submitted today’s quiz. Come back tomorrow for the next drop.
+        </p>
+        <button className="btn btn-secondary" onClick={() => setScreen('leaderboard')}>
+          See the leaderboard
+        </button>
+        <button className="btn btn-ghost" onClick={() => setScreen('home')}>
+          Back home
+        </button>
+      </div>
+    );
+  }
+
+  if (screen === 'no-set') {
+    return (
+      <div className="screen results">
+        <header className="results-header">
+          <span className="label">Hang tight</span>
+          <h1 className="results-headline">Not live yet</h1>
+        </header>
+        <p style={{ color: 'var(--muted)', textAlign: 'center' }}>
+          Today’s quiz isn’t live yet — check back soon.
+        </p>
+        <button className="btn btn-secondary" onClick={() => setScreen('leaderboard')}>
+          See the leaderboard
+        </button>
+        <button className="btn btn-ghost" onClick={() => setScreen('home')}>
+          Back home
+        </button>
+      </div>
+    );
+  }
+
+  if (screen === 'expired') {
+    return (
+      <div className="screen results">
+        <header className="results-header">
+          <span className="label">Time’s up</span>
+          <h1 className="results-headline">Quiz expired</h1>
+        </header>
+        <p style={{ color: 'var(--muted)', textAlign: 'center' }}>
+          Your time ran out, so no score was recorded today. Come back tomorrow for the
+          next drop.
         </p>
         <button className="btn btn-secondary" onClick={() => setScreen('leaderboard')}>
           See the leaderboard
