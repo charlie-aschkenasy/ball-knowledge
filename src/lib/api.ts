@@ -132,27 +132,33 @@ export function getToday(): Promise<TodayQuiz> {
   return callFunction<TodayQuiz>('get-today', {});
 }
 
+/** Per-question time spent, in milliseconds, keyed by question id. */
+export type AnswerTimes = Record<string, number>;
+
 /**
  * Encode one selection into the submit payload item. The `submit` Edge
  * Function matches answers by `questionId` and grades multiple choice via
  * `value.selectedIndex === correct_index` (other types use value.text /
- * value.mapping). Keep this shape in sync with that function.
+ * value.mapping). `timeMs` is optional and captured for later tuning. Keep this
+ * shape in sync with that function.
  */
-function encodeAnswer(questionId: string, selected: number | null) {
-  return { questionId, value: { selectedIndex: selected } };
+function encodeAnswer(questionId: string, selected: number | null, timeMs?: number) {
+  return { questionId, value: { selectedIndex: selected }, timeMs };
 }
 
 /**
  * Submit the player's answers and get back the graded result. The order of
  * `answers` mirrors the quiz order. `startedAt` (from get-today) is recorded on
- * the submission. Throws AlreadyPlayedError if the user has already played today.
+ * the submission; `times` carries the ms spent per question. Throws
+ * AlreadyPlayedError if the user has already played today.
  */
 export function submitQuiz(
   selected: SelectedAnswers,
   startedAt?: string,
+  times?: AnswerTimes,
 ): Promise<SubmitResult> {
   const answers = Object.entries(selected).map(([id, value]) =>
-    encodeAnswer(id, value),
+    encodeAnswer(id, value, times?.[id]),
   );
   return callFunction<SubmitResult>('submit', { answers, started_at: startedAt });
 }

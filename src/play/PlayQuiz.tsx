@@ -11,11 +11,11 @@
 import { useEffect, useRef, useState } from 'react';
 import DropReveal from '../components/DropReveal';
 import TimerRing from '../components/TimerRing';
-import type { ServerQuestion, SelectedAnswers } from '../lib/api';
+import type { ServerQuestion, SelectedAnswers, AnswerTimes } from '../lib/api';
 
 interface Props {
   questions: ServerQuestion[];
-  onComplete: (answers: SelectedAnswers) => void;
+  onComplete: (answers: SelectedAnswers, times: AnswerTimes) => void;
   submitting: boolean;
 }
 
@@ -48,11 +48,20 @@ export default function PlayQuiz({ questions, onComplete, submitting }: Props) {
   const [secondsLeft, setSecondsLeft] = useState(totalSeconds);
   const isLast = index === questions.length - 1;
 
-  // Accumulated answers keyed by question id.
+  // Accumulated answers + per-question time spent, keyed by question id.
   const answersRef = useRef<SelectedAnswers>({});
+  const timesRef = useRef<AnswerTimes>({});
+  // Monotonic timestamp (ms) when the current question entered the asking phase.
+  const startedAtRef = useRef<number>(0);
   // Idempotency guard: a click landing exactly as the timer hits zero must not
   // commit twice. A ref mutates synchronously, unlike batched state.
   const lockedRef = useRef(false);
+
+  // Stamp the per-question start whenever a question begins (first question
+  // after the reveal, and each subsequent question after advancing).
+  useEffect(() => {
+    if (phase === 'asking') startedAtRef.current = performance.now();
+  }, [index, phase]);
 
   // Countdown while asking.
   useEffect(() => {
@@ -78,13 +87,17 @@ export default function PlayQuiz({ questions, onComplete, submitting }: Props) {
     if (lockedRef.current) return;
     lockedRef.current = true;
     answersRef.current[question.id] = value;
+    timesRef.current[question.id] = Math.max(
+      0,
+      Math.round(performance.now() - startedAtRef.current),
+    );
     setPicked(value);
     setPhase('committed');
   }
 
   function advance() {
     if (isLast) {
-      onComplete(answersRef.current);
+      onComplete(answersRef.current, timesRef.current);
       return;
     }
     const nextIndex = index + 1;

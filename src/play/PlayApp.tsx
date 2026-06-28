@@ -17,6 +17,7 @@ import {
   AlreadyPlayedError,
   type ServerQuestion,
   type SelectedAnswers,
+  type AnswerTimes,
   type SubmitResult,
 } from '../lib/api';
 
@@ -50,11 +51,11 @@ export default function PlayApp() {
     }
   }
 
-  async function finishQuiz(answers: SelectedAnswers) {
+  async function finishQuiz(answers: SelectedAnswers, times: AnswerTimes) {
     setSelected(answers);
     setSubmitting(true);
     try {
-      const res = await submitQuiz(answers, startedAt);
+      const res = await submitQuiz(answers, startedAt, times);
       setResult(res);
       setScreen('results');
     } catch (e) {
