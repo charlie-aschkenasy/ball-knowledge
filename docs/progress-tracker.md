@@ -57,10 +57,15 @@
 
 ## Phase 2 — Content pipeline + bank
 
-- [ ] Draft → verify → store pipeline built
-- [ ] 30–60 days of verified sets banked
-- [ ] Daily publish pulls only `verified = true` questions
-- [ ] ✅ Phase 2 gate passed
+- [~] Draft → verify → store pipeline built — in-app user-submission flow live
+      (propose → AI generates answer+options+source via Claude → admin approves into
+      the bank). Generation needs the ANTHROPIC_API_KEY secret to activate; bulk
+      OpenTDB/stat authoring deferred.
+- [x] 30–60 days of verified sets banked — buffer raised to 30 days; prod holds 32.
+- [x] Daily publish pulls only `verified = true` questions (done in Phase 1).
+- [ ] ✅ Phase 2 gate passed — remaining: real `source_url` per question, full
+      correctness pass (random 30-sample audited clean; 1 quality flag: q0057 has a
+      duplicate option).
 
 ## Phase 3 — Go native (Expo)
 
