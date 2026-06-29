@@ -10,11 +10,12 @@ import { useAuth } from '../auth/AuthProvider';
 interface Props {
   onPlay: () => void;
   onLeaderboards: () => void;
+  onPropose: () => void;
   loadingQuiz: boolean;
   error: string | null;
 }
 
-export default function PlayHome({ onPlay, onLeaderboards, loadingQuiz, error }: Props) {
+export default function PlayHome({ onPlay, onLeaderboards, onPropose, loadingQuiz, error }: Props) {
   const { user, signOut } = useAuth();
 
   return (
@@ -48,7 +49,13 @@ export default function PlayHome({ onPlay, onLeaderboards, loadingQuiz, error }:
         <button className="btn btn-secondary" onClick={onLeaderboards}>
           Leaderboard
         </button>
-        <button className="btn btn-secondary" onClick={() => void signOut()}>
+        <button className="btn btn-secondary" onClick={onPropose}>
+          Propose a question
+        </button>
+      </div>
+
+      <div className="home-action-grid">
+        <button className="btn btn-ghost btn-small" onClick={() => void signOut()}>
           Sign out
         </button>
       </div>

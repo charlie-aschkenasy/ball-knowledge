@@ -181,6 +181,41 @@ export function submitQuiz(
   return callFunction<SubmitResult>('submit', { answers, started_at: startedAt });
 }
 
+// ---------------------------------------------------------------------------
+// User-submitted questions (UGC)
+// ---------------------------------------------------------------------------
+
+export type ProposalStatus = 'pending' | 'generated' | 'approved' | 'rejected' | 'failed';
+
+export interface MyProposal {
+  id: string;
+  prompt: string;
+  sport: string;
+  status: ProposalStatus;
+  created_at: string;
+  rejection_reason: string | null;
+}
+
+/** Submit a proposed question (prompt + sport). The server generates the answer
+ *  + options in the background; an admin reviews and approves into the bank. */
+export function proposeQuestion(
+  prompt: string,
+  sport: string,
+): Promise<{ status: string; message?: string }> {
+  return callFunction('propose-question', { prompt, sport });
+}
+
+/** The signed-in user's own proposals + their review status. Answer fields are
+ *  intentionally not selected. */
+export async function getMyProposals(): Promise<MyProposal[]> {
+  const { data, error } = await supabase
+    .from('question_proposals')
+    .select('id, prompt, sport, status, created_at, rejection_reason')
+    .order('created_at', { ascending: false });
+  if (error) throw new Error(error.message);
+  return (data ?? []) as MyProposal[];
+}
+
 /** Read the leaderboard view, highest score first. */
 export async function getLeaderboard(): Promise<LeaderboardRow[]> {
   const { data, error } = await supabase

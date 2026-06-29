@@ -11,6 +11,7 @@ import PlayHome from './PlayHome';
 import PlayQuiz from './PlayQuiz';
 import PlayResults from './PlayResults';
 import PlayLeaderboard from './PlayLeaderboard';
+import PlayPropose from './PlayPropose';
 import {
   getToday,
   submitQuiz,
@@ -28,6 +29,7 @@ type Screen =
   | 'quiz'
   | 'results'
   | 'leaderboard'
+  | 'propose'
   | 'already-played'
   | 'no-set'
   | 'expired';
@@ -107,6 +109,10 @@ export default function PlayApp() {
     return <PlayLeaderboard onHome={() => setScreen('home')} />;
   }
 
+  if (screen === 'propose') {
+    return <PlayPropose onHome={() => setScreen('home')} />;
+  }
+
   if (screen === 'already-played') {
     return (
       <div className="screen results">
@@ -172,6 +178,7 @@ export default function PlayApp() {
     <PlayHome
       onPlay={startQuiz}
       onLeaderboards={() => setScreen('leaderboard')}
+      onPropose={() => setScreen('propose')}
       loadingQuiz={loadingQuiz}
       error={homeError}
     />
